@@ -9,9 +9,7 @@ private:
     string role;
     char gender;
     int age;
-    bool vaccinated;
     Vaccine vaccine;
-    int numOfDoses;
 
 public:
     //constructors

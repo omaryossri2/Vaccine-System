@@ -29,6 +29,44 @@ User::User() {
     this->vaccinated = false;
     this->numOfDoses = 0;
 }
+
+void User::AddData() {
+    string s;
+    char c;
+    int i;
+    bool b;
+    cout << "Welcome to the vaccine system" << endl;
+    cout << "Fill this form" << endl;
+    cout << "-----------------------------" << endl;
+
+    cout << "Please enter first name : ";
+    cin >> s; setFName(s);
+
+    cout << "Please enter last name : ";
+    cin >> s; setLName(s);
+
+    cout << "Please enter national id : ";
+    cin >> s; setNationalId(s);
+
+    cout << "Please enter password : ";
+    cin >> s; setPassword(s);
+
+    cout << "Please enter governate : ";
+    cin >> s; setNationalId(s);
+
+    cout << "Please enter national id : ";
+    cin >> s; setNationalId(s);
+
+    cout << "Please enter role : ";
+    cin >> s; setRole(s);
+
+    cout << "Please enter gender (m/f) : ";
+    cin >> c; setGender(c);
+
+    cout << "Please enter age (whole number) : ";
+    cin >> i; setAge(i);
+
+}
 void User:: UpdateData(string fName, string LName, string nationalId, string password, string governate, string role, char gender, int age, bool vaccinated, Vaccine vaccine, int numOfDoses) {
     setFName(fName);
     setLName(LName);
