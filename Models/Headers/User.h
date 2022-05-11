@@ -1,3 +1,8 @@
+#include<iostream>
+#include "map"
+#include "Vaccine.h"
+using namespace std;
+
 class User
 {
 private:
@@ -11,16 +16,20 @@ private:
     int age;
     Vaccine vaccine;
 
+    bool IsAdmin(const User& user);
+
 public:
     //constructors
     User();
     User(string fName, string LName, string nationalId, string password, string governate, string role, char gender, int age, bool vaccinated, Vaccine vaccine, int numOfDoses);
 
     //methods
-    void ViewData(ArrList<User> users, User user, ArrList<User> Q, ArrList<Vaccine> v); // prints all data by entred by the user with proper messages
+//    void ViewData(ArrList<User> users, User user, ArrList<User> Q, ArrList<Vaccine> v); // prints all data by entred by the user with proper messages
     void UpdateData(string fName, string LName, string nationalId, string password, string governate, string role, char gender, int age, bool vaccinated, Vaccine vaccine, int numOfDoses); // updates everything
     void UpdateData_Prompts(); //asks the user which attributes they wish to update and updates them
-    void DeleteData(ArrList<User> users, User user, ArrList<User> Q, ArrList<Vaccine> v); // allows the user to set all its attributes to null
+    void DeleteData(const map<string, User>& users, const User& user);
+    void DeleteOne(map<string, User> users, const User& currentUser, const string& nationalId);
+    void DeleteAll(map<string, User> users, const User& currentUser);
 
     //setters
     void setFName(string s) {
@@ -47,14 +56,8 @@ public:
     void setAge(int i) {
         age = i;
     }
-    void setVaccinated(bool b) {
-        vaccinated = b;
-    }
     void setVaccine(Vaccine v) {
         vaccine = v;
-    }
-    void setNumOfDoses(int i) {
-        numOfDoses = i;
     }
 
     //getters
@@ -82,13 +85,8 @@ public:
     int getAge() {
         return age;
     }
-    bool getVaccinated() {
-        return vaccinated;
-    }
+
     Vaccine getVaccine() {
         return vaccine;
-    }
-    int getNumOfDoses() {
-        return numOfDoses;
     }
 };
