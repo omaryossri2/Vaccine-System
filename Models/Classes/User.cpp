@@ -52,12 +52,6 @@ void User::AddData() {
     cout << "Please enter governate : ";
     cin >> s; setNationalId(s);
 
-    cout << "Please enter national id : ";
-    cin >> s; setNationalId(s);
-
-    cout << "Please enter role : ";
-    cin >> s; setRole(s);
-
     cout << "Please enter gender (m/f) : ";
     cin >> c; setGender(c);
 
@@ -116,10 +110,10 @@ void User::UpdateData_Prompts() {
 }
 
 
-void User::DeleteData(const map<string, User>& users, const User& user) {
+void User::DeleteData(map<string, User*>& users, const User& user) {
     if (IsAdmin(user)) {
         int input = 0;
-        char check = 0;
+
         if (users.empty()) {
             cout << "There are no users\n";
         } else {
@@ -158,8 +152,8 @@ void User::DeleteData(const map<string, User>& users, const User& user) {
         DeleteOne(users, user, user.nationalId);
     }
 }
-void User::DeleteOne(map<string, User> users, const User& currentUser, const string& nationalId) {
-    std::map<string, User>::iterator it;
+void User::DeleteOne(map<string, User*>& users, const User& currentUser, const string& nationalId) {
+    std::map<string, User*>::iterator it;
 
     if(!IsAdmin(currentUser) && currentUser.nationalId != nationalId) {
         cout  << "You don't have enough permissions to delete another user\n";
@@ -170,14 +164,16 @@ void User::DeleteOne(map<string, User> users, const User& currentUser, const str
 
     if(it == users.end()) {
         cout << "User Doesn't Exist\n";
+        return;
     }
 
     users.erase(it);
     cout << "User with national id: " << nationalId << " deleted successfully\n";
 }
 
-void User::DeleteAll(map<string, User> users, const User& currentUser) {
+void User::DeleteAll(map<string, User*>& users, const User& currentUser) {
     if(!IsAdmin(currentUser)) {
+        cout << "You are not authorized to delete all users\n";
         return;
     }
 
@@ -198,7 +194,7 @@ bool User::IsAdmin(const User& user) {
     return true;
 }
 
-//void User::ViewData(map<string, User> users, User user, ArrList<User> Q, ArrList<Vaccine> v) {
+//void User::ViewData(map<string, User*>& users, User& user, ArrList<User> Q, ArrList<Vaccine> v) {
 //    if (role == "user") {
 //        cout << "First Name :  " << fName << " \n";
 //        cout << "Last Name :  " << LName << " \n";

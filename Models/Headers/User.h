@@ -28,9 +28,9 @@ public:
 //    void ViewData(ArrList<User> users, User user, ArrList<User> Q, ArrList<Vaccine> v); // prints all data by entred by the user with proper messages
     void UpdateData(string fName, string LName, string nationalId, string password, string governate, string role, char gender, int age, bool vaccinated, Vaccine vaccine, int numOfDoses); // updates everything
     void UpdateData_Prompts(); //asks the user which attributes they wish to update and updates them
-    void DeleteData(const map<string, User>& users, const User& user);
-    void DeleteOne(map<string, User> users, const User& currentUser, const string& nationalId);
-    void DeleteAll(map<string, User> users, const User& currentUser);
+    void DeleteData(map<string, User*>& users, const User& user);
+    void DeleteOne(map<string, User*>& users, const User& currentUser, const string& nationalId);
+    void DeleteAll(map<string, User*>& users, const User& currentUser);
 
     //setters
     void setFName(string s) {
