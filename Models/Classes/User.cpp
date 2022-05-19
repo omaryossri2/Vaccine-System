@@ -43,9 +43,6 @@ void User::AddData() {
     cout << "Please enter last name : ";
     cin >> s; setLName(s);
 
-    cout << "Please enter national id : ";
-    cin >> s; setNationalId(s);
-
     cout << "Please enter password : ";
     cin >> s; setPassword(s);
 
