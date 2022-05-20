@@ -30,13 +30,26 @@ int Request::GetNumberOfUserRequestsWithStatus(vector<list<Request>::iterator>& 
     return count;
 }
 
-void Request::DeleteUserRequestWithStatus(list<Request>& requests, vector<list<Request>::iterator>& requestsIterators, int status) {
+list<Request>::iterator Request::DeleteUserRequestWithStatus(list<Request>& requests, vector<list<Request>::iterator>& requestsIterators, int status) {
+    auto foundIt = requests.end();
+
     for(auto it : requestsIterators) {
         auto req = *it;
 
         if(req.getState() == status) {
+            foundIt = it;
             requests.erase(it);
             break;
         }
     }
+
+    return foundIt;
+}
+
+void Request::DeleteAllUserRequests(list<Request>& requests, vector<list<Request>::iterator>& requestsIterators) {
+    for(auto it : requestsIterators) {
+        requests.erase(it);
+    }
+
+    requestsIterators.clear();
 }

@@ -108,14 +108,10 @@ void User::UpdateData_Prompts() {
     }
 }
 
-
-void User::DeleteData(unordered_map<string, User>& users, const User& user) {
+void User::DeleteData(unordered_map<string, User> &users, const User &user, list<Request> &requests) {
     if (IsAdmin(user)) {
         int input = 0;
 
-        if (users.empty()) {
-            cout << "There are no users\n";
-        } else {
             cout << "---------------------------------------------------" << endl;
             cout << endl;
 
@@ -123,6 +119,11 @@ void User::DeleteData(unordered_map<string, User>& users, const User& user) {
             cout << "2) Delete all users " << endl;
             cin >> input;
 
+
+            while(input != 1 && input != 2) {
+                cout << "You entered an invalid number. Please try again." << endl;
+                cin >> input;
+            }
 
             switch (input) {
                 case 1:
@@ -132,26 +133,22 @@ void User::DeleteData(unordered_map<string, User>& users, const User& user) {
 
                     cout << " enter the id of the user you want to delete ";
                     cin >> n_id;
-                    DeleteOne(users, user, n_id);
+                    DeleteOne(users, user, n_id, requests);
                     break;
                 }
                 case 2:
                 {
-                    DeleteAll(users, user);
+                    DeleteAll(users, user, requests);
                     break;
                 }
-                default:
-                {
-                    cout << " you entered invalid number";
-                }
-
+                default:{}
             }
-        }
     } else {
-        DeleteOne(users, user, user.nationalId);
+        DeleteOne(users, user, user.nationalId, requests);
     }
 }
-void User::DeleteOne(unordered_map<string, User>& users, const User& currentUser, const string& nationalId) {
+void User::DeleteOne(unordered_map<string, User> &users, const User &currentUser, const string &nationalId,
+                     list<Request> &requests) {
     std::unordered_map<string, User>::iterator it;
 
     if(!IsAdmin(currentUser) && currentUser.nationalId != nationalId) {
@@ -166,27 +163,46 @@ void User::DeleteOne(unordered_map<string, User>& users, const User& currentUser
         return;
     }
 
+    Request::DeleteAllUserRequests(requests, it->second.getRequests());
+
     users.erase(it);
     cout << "User with national id: " << nationalId << " deleted successfully\n";
 }
 
-void User::DeleteAll(unordered_map<string, User>& users, const User& currentUser) {
+void User::DeleteAll(unordered_map<string, User> &users, User &currentUser, list<Request> &requests) {
+    int count = 0;
+
     if(!IsAdmin(currentUser)) {
         cout << "You are not authorized to delete all users\n";
         return;
     }
 
-    int count = users.size();
+    auto it = users.begin();
 
-    users.clear();
+    while(it != users.end()) {
+        auto user = it->second;
+
+        if(user.getRole() == "user") {
+            count++;
+            Request::DeleteAllUserRequests(requests, user.getRequests());
+            users.erase(it);
+        }
+    }
 
     cout << "Deleted " << count << " users successfully\n";
 }
 
 bool User::IsAdmin(const User& user) {
-    cout  << "Current user role is " << user.role << endl;
-
     if(user.role != "admin") {
+        return false;
+    }
+
+    return true;
+}
+
+
+bool User::IsWorker(User& user) {
+    if(user.role != "worker") {
         return false;
     }
 
@@ -196,13 +212,18 @@ bool User::IsAdmin(const User& user) {
 void User::CheckPatients(unordered_map<string, User>& users, list<Request>& requests, User& u, vector<Request>& v)
 {
     // di htb2a fl main bns2al al admin kol shwya lw 3ayz ydakhal users anhom gom
-    if (IsAdmin(u)) {
+    if (IsWorker(u)) {
         string nid;
         char ans;
 
         while (true) {
             cout << "Enter The National ID of The Patient: ";
             cin >> nid;
+
+            if (nid == "n")
+            {
+                break;
+            }
 
             cout << "Is the national id entered: " << nid << " correct? ";
             cin >> ans;
@@ -213,29 +234,23 @@ void User::CheckPatients(unordered_map<string, User>& users, list<Request>& requ
                 continue;
             }
 
-
             auto it = std::find_if(v.begin(), v.end(), [&nid](Request req) {
                 return req.getUserNationalId() == nid;
             });
 
             if(it != v.end()) {
-                Request::CreateRequest(requests, nid, 2, const_cast<Vaccine &>(it->getVaccine()));
-
                 auto userIt = users.find(nid);
-                Request::DeleteUserRequestWithStatus(requests, userIt->second.getRequests(), 1);
+
+                auto reqIt = Request::CreateRequest(requests, nid, 2, const_cast<Vaccine &>(it->getVaccine()));
+                userIt->second.addRequest(reqIt);
+
+                reqIt = Request::DeleteUserRequestWithStatus(requests, userIt->second.getRequests(), 1);
+                userIt->second.deleteRequest(reqIt);
 
                 v.erase(it);
                 cout << "Patient Fulfilled" << endl;
             } else {
                 cout << "This Patient Is Not Due Today" << endl;
-            }
-
-            cout << "Are there other Patients For Today? ";
-            cin >> ans;
-
-            if (tolower(ans) == 'n')
-            {
-                break;
             }
         }
     }
@@ -275,7 +290,8 @@ void User::EndList(unordered_map<string, User>& users, list<Request>& requests, 
 
             Request::CreateRequest(requests, r.getUserNationalId(), 3, const_cast<Vaccine &>(r.getVaccine()));
 
-            Request::DeleteUserRequestWithStatus(requests, userIt->second.getRequests(), 1);
+            auto reqIt = Request::DeleteUserRequestWithStatus(requests, userIt->second.getRequests(), 1);
+            userIt->second.deleteRequest(reqIt);
 
             cout << "Marking as missed: " << r.getUserNationalId() << endl;
         }

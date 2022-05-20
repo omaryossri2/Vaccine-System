@@ -24,7 +24,10 @@ private:
     vector<list<Request>::iterator> requestPointers;
 
     static bool IsAdmin(const User& user);
-
+    static void DeleteOne(unordered_map<string, User> &users, const User &currentUser, const string &nationalId,
+                          list<Request> &requests);
+    static void DeleteAll(unordered_map<string, User> &users, User &currentUser, list<Request> &requests);
+    static bool IsWorker(User& user);
 public:
     //constructors
     User();
@@ -35,9 +38,7 @@ public:
 //    void ViewData(ArrList<User> users, User user, ArrList<User> Q, ArrList<Vaccine> v); // prints all data by entred by the user with proper messages
     void UpdateData(string fName, string LName, string nationalId, string password, string governate, string role, char gender, int age, bool vaccinated, Vaccine vaccine, int numOfDoses); // updates everything
     void UpdateData_Prompts(); //asks the user which attributes they wish to update and updates them
-    void DeleteData(unordered_map<string, User>& users, const User& user);
-    void DeleteOne(unordered_map<string, User>& users, const User& currentUser, const string& nationalId);
-    void DeleteAll(unordered_map<string, User>& users, const User& currentUser);
+    static void DeleteData(unordered_map<string, User> &users, const User &user, list<Request> &requests);
     static void CheckPatients(unordered_map<string, User>& users, list<Request>& requests, User& u, vector<Request>& v);
     static void EndList(unordered_map<string, User>& users, list<Request>& requests, const User& u, vector<Request>& v);
     static vector<Request> PopulateTodayPatients(list<Request>& requests);
@@ -107,6 +108,33 @@ public:
     }
     int getAge() {
         return age;
+    }
+
+    int isFullyVaccinated() {
+        int numberOfDoses = Request::GetNumberOfUserRequestsWithStatus(getRequests(), 2);
+
+        if(numberOfDoses == 0) {
+            return -1;
+        } else if (numberOfDoses == getVaccine().getReqDoses()) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+
+    string getVaccinationStatus() {
+        int vacc = isFullyVaccinated();
+        string message;
+
+        if(vacc == -1) {
+            message = "Not vaccinated";
+        } else if (vacc == 1) {
+            message = "Fully vaccinated";
+        } else {
+            message = "Partially vaccinated";
+        }
+
+        return message;
     }
 
     Vaccine& getVaccine() {
