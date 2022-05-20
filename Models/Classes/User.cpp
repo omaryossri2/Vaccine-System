@@ -1,12 +1,9 @@
 #include "../Headers/User.h"
 #include<iostream>
-#include "map"
 #include "string"
 #include <vector>
 #include "unordered_map"
-#include "queue"
 #include "list"
-#include "string.h"
 
 using namespace std;
 
@@ -112,7 +109,7 @@ void User::UpdateData_Prompts() {
 }
 
 
-void User::DeleteData(map<string, User*>& users, const User& user) {
+void User::DeleteData(unordered_map<string, User>& users, const User& user) {
     if (IsAdmin(user)) {
         int input = 0;
 
@@ -154,8 +151,8 @@ void User::DeleteData(map<string, User*>& users, const User& user) {
         DeleteOne(users, user, user.nationalId);
     }
 }
-void User::DeleteOne(map<string, User*>& users, const User& currentUser, const string& nationalId) {
-    std::map<string, User*>::iterator it;
+void User::DeleteOne(unordered_map<string, User>& users, const User& currentUser, const string& nationalId) {
+    std::unordered_map<string, User>::iterator it;
 
     if(!IsAdmin(currentUser) && currentUser.nationalId != nationalId) {
         cout  << "You don't have enough permissions to delete another user\n";
@@ -173,7 +170,7 @@ void User::DeleteOne(map<string, User*>& users, const User& currentUser, const s
     cout << "User with national id: " << nationalId << " deleted successfully\n";
 }
 
-void User::DeleteAll(map<string, User*>& users, const User& currentUser) {
+void User::DeleteAll(unordered_map<string, User>& users, const User& currentUser) {
     if(!IsAdmin(currentUser)) {
         cout << "You are not authorized to delete all users\n";
         return;
@@ -196,14 +193,12 @@ bool User::IsAdmin(const User& user) {
     return true;
 }
 
-void User::CheckPatients(map<string, int>& requests, User& u, vector<string>& v)
+void User::CheckPatients(unordered_map<string, User>& users, list<Request>& requests, User& u, vector<Request>& v)
 {
     // di htb2a fl main bns2al al admin kol shwya lw 3ayz ydakhal users anhom gom
     if (IsAdmin(u)) {
-
         string nid;
         char ans;
-        vector<string>::iterator it;
 
         while (true) {
             cout << "Enter The National ID of The Patient: ";
@@ -218,16 +213,21 @@ void User::CheckPatients(map<string, int>& requests, User& u, vector<string>& v)
                 continue;
             }
 
-            it = std::find(v.begin(), v.end(), nid);
-            if(it != v.end()) {
-                v.erase(it);
-                //delete pending status in unorderedmap
-                //add fulfilled status in unorderedmap
 
+            auto it = std::find_if(v.begin(), v.end(), [&nid](Request req) {
+                return req.getUserNationalId() == nid;
+            });
+
+            if(it != v.end()) {
+                Request::CreateRequest(requests, nid, 2, const_cast<Vaccine &>(it->getVaccine()));
+
+                auto userIt = users.find(nid);
+                Request::DeleteUserRequestWithStatus(requests, userIt->second.getRequests(), 1);
+
+                v.erase(it);
                 cout << "Patient Fulfilled" << endl;
             } else {
                 cout << "This Patient Is Not Due Today" << endl;
-                continue;
             }
 
             cout << "Are there other Patients For Today? ";
@@ -241,31 +241,27 @@ void User::CheckPatients(map<string, int>& requests, User& u, vector<string>& v)
     }
 }
 
-vector<string> User::PopulateTodayPatients(map<string, int>& requests) {
-    vector<string> list1;
-    map<string, int>::iterator it;
+vector<Request> User::PopulateTodayPatients(list<Request>& requests) {
+    vector<Request> list1;
+    list<Request>::iterator it;
 
     for (it = requests.begin(); it != requests.end(); it++) {
         if (list1.size() == 20)
             break;
 
-        vector<string> splitRequest = SplitRequestKey(const_cast<string &>(it->first));
-        string status = splitRequest.at(2);
-
-        if (status.compare("1") == 0) {
-            list1.push_back(splitRequest.at(1));
+        if (it->getState() == 1) {
+            list1.push_back(*it);
         }
     }
 
     return list1;
 }
 
-void User::EndList(const map <string, int>& requested, const User& u, vector<string>& v)
+void User::EndList(unordered_map<string, User>& users, list<Request>& requests, const User& u, vector<Request>& v)
 {
     //di htb2a fl main abl ml program y2fl bnshel al fl list w nzbt al status bta3hom
     if (IsAdmin(u)) {
         char ans;
-        vector<string>::iterator it;
         cout << "Are you sure there are no other patients today? ";
         cin >> ans;
 
@@ -274,37 +270,21 @@ void User::EndList(const map <string, int>& requested, const User& u, vector<str
             return;
         }
 
-        for (const string& s : v) {
-            //delete pending status in unorderedmap
-            //add missed status in unorderedmap
+        for (Request& r : v) {
+            auto userIt = users.find(r.getUserNationalId());
 
-            cout << "Marking as missed: " << s << endl;
+            Request::CreateRequest(requests, r.getUserNationalId(), 3, const_cast<Vaccine &>(r.getVaccine()));
+
+            Request::DeleteUserRequestWithStatus(requests, userIt->second.getRequests(), 1);
+
+            cout << "Marking as missed: " << r.getUserNationalId() << endl;
         }
 
         v.clear();
     }
 }
 
-
-vector<string> User::SplitRequestKey(string& key) {
-    vector<string> s;
-
-    char keyChar[key.length() + 1];
-    strcpy(keyChar, key.c_str());
-
-    char *token = strtok(keyChar, "_");
-
-    int i = 0;
-
-    while (token != NULL) {
-        s.emplace_back(token);
-        token = strtok(NULL, "_");
-    }
-
-    return s;
-}
-
-//void User::ViewData(map<string, User*>& users, User& user, ArrList<User> Q, ArrList<Vaccine> v) {
+//void User::ViewData(unordered_map<string, User>& users, User& user, ArrList<User> Q, ArrList<Vaccine> v) {
 //    if (role == "user") {
 //        cout << "First Name :  " << fName << " \n";
 //        cout << "Last Name :  " << LName << " \n";

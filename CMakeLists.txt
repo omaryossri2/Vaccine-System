@@ -13,5 +13,7 @@ add_executable(Vaccine_System
         Models/Classes/Vaccine.cpp
         Models/Headers/User.h
         Models/Headers/Vaccine.h
+        Models/Headers/Request.h
         application.cpp
+        Models/Classes/Request.cpp
         )

@@ -1,3 +1,5 @@
+#pragma once
+
 #include "string"
 using namespace std;
 
@@ -14,10 +16,6 @@ public:
     Vaccine();
     Vaccine(int numOfUsers, string name, string country, int reqDoses);
 
-    //setters
-    void setNumOfUsers(int i) {
-        numOfUsers = i;
-    }
     void setName(string s) {
         name = s;
     }
@@ -29,9 +27,6 @@ public:
     }
 
     //getters
-    int getNumOfUsers() {
-        return numOfUsers;
-    }
     string getName() {
         return name;
     }
@@ -43,8 +38,5 @@ public:
     }
 
     //methods
-    void dec_numOfUsers() {
-        numOfUsers--;
-    }
-    void UpdateData(int numOfUsers, string name, string country, int reqDoses);
+    void UpdateData( string name, string country, int reqDoses);
 };

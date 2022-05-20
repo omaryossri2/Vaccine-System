@@ -16,8 +16,7 @@ Vaccine::Vaccine(int numOfUsers, string name, string country, int reqDoses) {
     this->reqDoses = reqDoses;
 }
 
-void Vaccine::UpdateData(int numOfUsers, string name, string country, int reqDoses) {
-    setNumOfUsers(numOfUsers);
+void Vaccine::UpdateData(string name, string country, int reqDoses) {
     setName(name);
     setCountry(country);
     setReqDoses(reqDoses);

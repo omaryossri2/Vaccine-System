@@ -1,20 +1,18 @@
 #include<iostream>
 #include "./Models/Headers/User.h"
-
-#include<map>
-#include <cstring>
+#include "forward_list"
 
 using namespace std;
 
-map<string, User*>::iterator GetUserIterator(map<string, User*>& users, const string& username) {
-    map<string, User*>::iterator it;
+unordered_map<string, User*>::iterator GetUserIterator(unordered_map<string, User*>& users, const string& username) {
+    unordered_map<string, User*>::iterator it;
 
     it = users.find(username);
 
     return it;
 }
 
-bool UserExists(map<string, User*>& users, map<string, User*>::iterator it) {
+bool UserExists(unordered_map<string, User*>& users, unordered_map<string, User*>::iterator it) {
     if(it == users.end()) {
         cout << "Username doesn't exist";
         return false;
@@ -23,7 +21,7 @@ bool UserExists(map<string, User*>& users, map<string, User*>::iterator it) {
     return true;
 }
 
-bool Login(map<string, User*>& users, string &nationalId, string &password) {
+bool Login(unordered_map<string, User*>& users, string &nationalId, string &password) {
     auto it = GetUserIterator(users, nationalId);
 
     if(!UserExists(users, it)) {
@@ -39,7 +37,7 @@ bool Login(map<string, User*>& users, string &nationalId, string &password) {
     return true;
 }
 
-bool Signup(map<string, User*>& users) {
+bool Signup(unordered_map<string, User*>& users) {
     User u;
     string nationalIdInput;
 
@@ -61,23 +59,36 @@ bool Signup(map<string, User*>& users) {
 }
 
 int main() {
+    unordered_map<string, User> users;
+    list<Request> requests;
+    Vaccine vacc;
+    vacc.UpdateData("Astrazeneca", "UK", 1);
+
+
     User admin;
     admin.setRole("admin");
 
-    map<string, int> requests;
+    for (int i = 0; i < 8 ; ++i) {
+        User u;
+        u.setVaccine(vacc);
+        u.setRole("admin");
+        u.setNationalId("3020612010387" + to_string(i));
 
-    requests.insert(make_pair("2022/01/13:12:05_30206120103878_1", 1));
-    requests.insert(make_pair("2022/01/12:12:05_30206120103875_1", 1));
-    requests.insert(make_pair("2022/01/12:12:06_30206120103876_1", 1));
-    requests.insert(make_pair("2022/01/14:12:05_30206120103879_1", 1));
+        auto it = Request::CreateRequest(requests, u.getNationalId(), 1, u.getVaccine());
+        u.addRequest(it);
 
-    vector<string> v = admin.PopulateTodayPatients(requests);
+        users.insert(make_pair(u.getNationalId(), u));
+    }
 
-    admin.CheckPatients(requests, admin, v);
+    vector<Request> v = User::PopulateTodayPatients(requests);
 
-    admin.EndList(requests, admin, v);
+    User::CheckPatients(users, requests, admin, v);
 
-    for (string s : v) {
-        cout << s << endl;
+    User::EndList(users, requests, admin, v);
+
+
+    for(auto r : requests) {
+        cout << "\n\n\n\n";
+        cout << r.getUserNationalId() << " " << r.getState();
     }
 }
