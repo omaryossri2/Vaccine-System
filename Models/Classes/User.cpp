@@ -2,6 +2,11 @@
 #include<iostream>
 #include "map"
 #include "string"
+#include <vector>
+#include "unordered_map"
+#include "queue"
+#include "list"
+#include "string.h"
 
 using namespace std;
 
@@ -189,6 +194,114 @@ bool User::IsAdmin(const User& user) {
     }
 
     return true;
+}
+
+void User::CheckPatients(map<string, int>& requests, User& u, vector<string>& v)
+{
+    // di htb2a fl main bns2al al admin kol shwya lw 3ayz ydakhal users anhom gom
+    if (IsAdmin(u)) {
+
+        string nid;
+        char ans;
+        vector<string>::iterator it;
+
+        while (true) {
+            cout << "Enter The National ID of The Patient: ";
+            cin >> nid;
+
+            cout << "Is the national id entered: " << nid << " correct? ";
+            cin >> ans;
+
+            if (tolower(ans) == 'n')
+            {
+                cout << "Please RE-enter National Id";
+                continue;
+            }
+
+            it = std::find(v.begin(), v.end(), nid);
+            if(it != v.end()) {
+                v.erase(it);
+                //delete pending status in unorderedmap
+                //add fulfilled status in unorderedmap
+
+                cout << "Patient Fulfilled" << endl;
+            } else {
+                cout << "This Patient Is Not Due Today" << endl;
+                continue;
+            }
+
+            cout << "Are there other Patients For Today? ";
+            cin >> ans;
+
+            if (tolower(ans) == 'n')
+            {
+                break;
+            }
+        }
+    }
+}
+
+vector<string> User::PopulateTodayPatients(map<string, int>& requests) {
+    vector<string> list1;
+    map<string, int>::iterator it;
+
+    for (it = requests.begin(); it != requests.end(); it++) {
+        if (list1.size() == 20)
+            break;
+
+        vector<string> splitRequest = SplitRequestKey(const_cast<string &>(it->first));
+        string status = splitRequest.at(2);
+
+        if (status.compare("1") == 0) {
+            list1.push_back(splitRequest.at(1));
+        }
+    }
+
+    return list1;
+}
+
+void User::EndList(const map <string, int>& requested, const User& u, vector<string>& v)
+{
+    //di htb2a fl main abl ml program y2fl bnshel al fl list w nzbt al status bta3hom
+    if (IsAdmin(u)) {
+        char ans;
+        vector<string>::iterator it;
+        cout << "Are you sure there are no other patients today? ";
+        cin >> ans;
+
+        if (tolower(ans) == 'n')
+        {
+            return;
+        }
+
+        for (const string& s : v) {
+            //delete pending status in unorderedmap
+            //add missed status in unorderedmap
+
+            cout << "Marking as missed: " << s << endl;
+        }
+
+        v.clear();
+    }
+}
+
+
+vector<string> User::SplitRequestKey(string& key) {
+    vector<string> s;
+
+    char keyChar[key.length() + 1];
+    strcpy(keyChar, key.c_str());
+
+    char *token = strtok(keyChar, "_");
+
+    int i = 0;
+
+    while (token != NULL) {
+        s.emplace_back(token);
+        token = strtok(NULL, "_");
+    }
+
+    return s;
 }
 
 //void User::ViewData(map<string, User*>& users, User& user, ArrList<User> Q, ArrList<Vaccine> v) {

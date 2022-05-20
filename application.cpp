@@ -1,21 +1,10 @@
 #include<iostream>
 #include "./Models/Headers/User.h"
+
 #include<map>
+#include <cstring>
 
 using namespace std;
-
-
-int main() {
-    map<string, User*> users;
-    User u;
-    u.setPassword("123");
-    u.setNationalId("1");
-
-    users.insert(make_pair("1", new User()));
-    User hamada;
-    hamada.AddData();
-    cout << users.size();
-}
 
 map<string, User*>::iterator GetUserIterator(map<string, User*>& users, const string& username) {
     map<string, User*>::iterator it;
@@ -67,4 +56,28 @@ bool Signup(map<string, User*>& users) {
 
     u.AddData();
     users.insert(make_pair(u.getNationalId(), &u));
+
+    return true;
+}
+
+int main() {
+    User admin;
+    admin.setRole("admin");
+
+    map<string, int> requests;
+
+    requests.insert(make_pair("2022/01/13:12:05_30206120103878_1", 1));
+    requests.insert(make_pair("2022/01/12:12:05_30206120103875_1", 1));
+    requests.insert(make_pair("2022/01/12:12:06_30206120103876_1", 1));
+    requests.insert(make_pair("2022/01/14:12:05_30206120103879_1", 1));
+
+    vector<string> v = admin.PopulateTodayPatients(requests);
+
+    admin.CheckPatients(requests, admin, v);
+
+    admin.EndList(requests, admin, v);
+
+    for (string s : v) {
+        cout << s << endl;
+    }
 }

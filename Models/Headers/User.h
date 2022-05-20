@@ -1,6 +1,10 @@
 #include<iostream>
 #include "map"
 #include "Vaccine.h"
+#include "unordered_map"
+#include "queue"
+#include "list"
+
 using namespace std;
 
 class User
@@ -31,6 +35,10 @@ public:
     void DeleteData(map<string, User*>& users, const User& user);
     void DeleteOne(map<string, User*>& users, const User& currentUser, const string& nationalId);
     void DeleteAll(map<string, User*>& users, const User& currentUser);
+    void CheckPatients(map<string, int>& requests, User& u, vector <string>& v);
+    void EndList(const map <string, int>& requested, const User& u, vector<string>& v);
+    vector<string> PopulateTodayPatients(map<string, int>& requests);
+    vector<string> SplitRequestKey(string& key);
 
     //setters
     void setFName(string s) {

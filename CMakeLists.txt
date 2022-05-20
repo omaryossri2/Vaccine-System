@@ -7,7 +7,6 @@ include_directories(.)
 include_directories(Models)
 include_directories(Models/Classes)
 include_directories(Models/Headers)
-include(application.cpp)
 
 add_executable(Vaccine_System
         Models/Classes/User.cpp
