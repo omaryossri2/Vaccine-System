@@ -108,7 +108,7 @@ void User::UpdateData_Prompts() {
     }
 }
 
-void User::DeleteData(unordered_map<string, User> &users, const User &user, list<Request> &requests) {
+void User::DeleteData(unordered_map<string, User> &users, User &user, list<Request> &requests) {
     if (IsAdmin(user)) {
         int input = 0;
 

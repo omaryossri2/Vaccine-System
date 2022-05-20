@@ -38,7 +38,7 @@ public:
 //    void ViewData(ArrList<User> users, User user, ArrList<User> Q, ArrList<Vaccine> v); // prints all data by entred by the user with proper messages
     void UpdateData(string fName, string LName, string nationalId, string password, string governate, string role, char gender, int age, bool vaccinated, Vaccine vaccine, int numOfDoses); // updates everything
     void UpdateData_Prompts(); //asks the user which attributes they wish to update and updates them
-    static void DeleteData(unordered_map<string, User> &users, const User &user, list<Request> &requests);
+    static void DeleteData(unordered_map<string, User> &users, User &user, list<Request> &requests);
     static void CheckPatients(unordered_map<string, User>& users, list<Request>& requests, User& u, vector<Request>& v);
     static void EndList(unordered_map<string, User>& users, list<Request>& requests, const User& u, vector<Request>& v);
     static vector<Request> PopulateTodayPatients(list<Request>& requests);
