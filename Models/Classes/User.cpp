@@ -338,10 +338,10 @@ int* User::GetStatistics(unordered_map<string, User>& users) {
             case 1:
                 fullyVaccinatedCount++;
                 break;
-            case -1:
+            case 0:
                 partiallyVaccinatedCount++;
                 break;
-            case 0:
+            case -1:
                 unvaccinatedCount++;
                 break;
             default:

@@ -12,19 +12,23 @@ void SeedData(unordered_map<string, User> &users, list<Request> &requests, Vacci
     admin.setPassword("123");
     admin.setRole("admin");
     admin.setVaccine(vacc);
+    admin.addRequest(Request::CreateRequest(requests, admin.getNationalId(), 2, admin.getVaccine()));
     users.insert(make_pair(admin.getNationalId(), admin));
 
     worker.setNationalId("2");
     worker.setPassword("123");
     worker.setRole("worker");
     worker.setVaccine(vacc);
+    worker.addRequest(Request::CreateRequest(requests, worker.getNationalId(), 2, worker.getVaccine()));
     users.insert(make_pair(worker.getNationalId(), worker));
 
     for (int i = 0; i < 50 ; ++i) {
+        int tensDigit = i / 10;
+        int unitDigit = i % 10;
         User u;
         u.setVaccine(vacc);
         u.setRole("user");
-        u.setNationalId("3020612010387" + to_string(i));
+        u.setNationalId("302061201038" + to_string(tensDigit) + to_string(unitDigit));
         u.setPassword("123");
         u.setGender(i % 3 ? 'm' : 'f');
 
@@ -95,8 +99,10 @@ User* Signup(unordered_map<string, User>& users, Vaccine &vacc, list<Request> &r
         it = GetUserIterator(users, nationalIdInput);
     }
 
+    u.setNationalId(nationalIdInput);
     u.AddData(requests, vacc);
     u.setVaccine(vacc);
+    u.setRole("user");
     users.insert(make_pair(u.getNationalId(), u));
 
     return &users.find(u.getNationalId())->second;
@@ -163,53 +169,47 @@ void AdminMenuWithPrompts(unordered_map<string, User>& users, User* loggedInUser
 void UserMenuWithPrompts(unordered_map<string, User>& users, User* loggedInUser, list<Request> &requests) {
     int vaccinationStatus = (*loggedInUser).isFullyVaccinated();
     int numberOfPendingRequests = Request::GetNumberOfUserRequestsWithStatus((*loggedInUser).getRequests(), 1);
+    bool creatingRequestAllowed = vaccinationStatus != 1 && numberOfPendingRequests == 0;
 
     if(vaccinationStatus == 1) {
         cout << "You are fully vaccinated\n";
     }
 
     if(numberOfPendingRequests > 0) {
-        cout << "You already have pending requests";
+        cout << "You already have pending requests\n";
     }
 
-    if (numberOfPendingRequests > 0 && numberOfPendingRequests < (*loggedInUser).getVaccine().getReqDoses()) {
-        cout << "You already have pending requests.\n";
-    } else {
-        cout << "1. Submit request\n";
+    if(creatingRequestAllowed) {
+        cout << "1. Submit Request\n";
     }
+
+    cout << "2. View user data.\n3. Update user data\n4. Delete user data\n";
 
     int input;
-    cout << "1. Delete user data\n2. View user data.\n3. View Requests\n4. View Statistics\n";
     cin >> input;
 
-    if(input != 1 && input != 2 &&input != 3 &&input != 4) {
-        AdminMenuWithPrompts(users, loggedInUser, requests);
+    if(!creatingRequestAllowed && input == 1) {
+        cout << "You are not allowed to create a new request\n";
+        UserMenuWithPrompts(users, loggedInUser, requests);
+
         return;
     }
 
     if(input == 1) {
+        (*loggedInUser).addRequest(Request::CreateRequest(requests, (*loggedInUser).getNationalId(), 1, (*loggedInUser).getVaccine()));
+        cout << "Request submitted successfully\n";
+    }
+
+    if(input == 2) {
+        User::ViewOneUserData(*loggedInUser);
+    }
+
+    if(input == 3) {
+        (*loggedInUser).UpdateData_Prompts();
+    }
+
+    if(input == 4) {
         User::DeleteData(users, *loggedInUser, requests);
-    } else if(input == 2) {
-        User::ViewData(users, *(loggedInUser));
-    } else if(input == 3) {
-
-        for(auto req : requests) {
-            cout << req.getUserNationalId() << " " << req.getState() << "\n";
-        }
-
-    } else if(input == 4) {
-        int* stats = User::GetStatistics(users);
-        unsigned long totalNumberOfUsers = users.size();
-
-        string messages[] = {"Percentage of males: ", "Percentage of females: ",
-                             "Percentage of fully vaccinated: ", "Percentage of partially vaccinated: ",
-                             "Percentage of unvaccinated: "};
-
-        cout << "Total Users count: " << totalNumberOfUsers << endl;
-
-        for (int i = 0; i < 5; ++i) {
-            cout << messages[i] << (float) (*(stats + i)) * 100 / totalNumberOfUsers << "%\n";
-        }
     }
 }
 
@@ -251,13 +251,7 @@ int main() {
             User::CheckPatients(users, requests, *loggedInUser, v);
             User::EndList(users, requests, *loggedInUser, v);
         } else {
-            int numberOfPendingRequests = Request::GetNumberOfUserRequestsWithStatus((*loggedInUser).getRequests(), 1);
-
-            if (numberOfPendingRequests > 0 && numberOfPendingRequests < (*loggedInUser).getVaccine().getReqDoses()) {
-                cout << "You already have pending requests.\n";
-            } else {
-                cout << "1. Submit request\n";
-            }
+            UserMenuWithPrompts(users, loggedInUser, requests);
         }
 
         cout << "GoodBye!" << endl;
