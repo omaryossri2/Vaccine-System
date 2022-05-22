@@ -4,33 +4,44 @@
 
 using namespace std;
 
-void SeedData(unordered_map<string, User> &users, list<Request> &requests) {
+void SeedData(unordered_map<string, User> &users, list<Request> &requests, Vaccine &vacc) {
     User admin;
     User worker;
-
-    Vaccine vacc;
-
-    vacc.UpdateData("Strangeness", "UK", 2);
 
     admin.setNationalId("1");
     admin.setPassword("123");
     admin.setRole("admin");
+    admin.setVaccine(vacc);
     users.insert(make_pair(admin.getNationalId(), admin));
 
     worker.setNationalId("2");
     worker.setPassword("123");
     worker.setRole("worker");
+    worker.setVaccine(vacc);
     users.insert(make_pair(worker.getNationalId(), worker));
 
-    for (int i = 0; i < 8 ; ++i) {
+    for (int i = 0; i < 50 ; ++i) {
         User u;
         u.setVaccine(vacc);
         u.setRole("user");
         u.setNationalId("3020612010387" + to_string(i));
         u.setPassword("123");
+        u.setGender(i % 3 ? 'm' : 'f');
 
-        auto it = Request::CreateRequest(requests, u.getNationalId(), 1, u.getVaccine());
-        u.addRequest(it);
+
+        if(i % 3 == 0) {
+            auto it = Request::CreateRequest(requests, u.getNationalId(), 2, u.getVaccine());
+            u.addRequest(it);
+            it = Request::CreateRequest(requests, u.getNationalId(), 2, u.getVaccine());
+            u.addRequest(it);
+        } else if (i % 3 == 1) {
+            auto it = Request::CreateRequest(requests, u.getNationalId(), 1, u.getVaccine());
+            u.addRequest(it);
+        } else {
+            auto it = Request::CreateRequest(requests, u.getNationalId(), 2, u.getVaccine());
+            u.addRequest(it);
+        }
+
 
         users.insert(make_pair(u.getNationalId(), u));
     }
@@ -69,7 +80,7 @@ User* Login(unordered_map<string, User>& users, string &nationalId, string &pass
     return &(it->second);
 }
 
-bool Signup(unordered_map<string, User>& users) {
+User* Signup(unordered_map<string, User>& users, Vaccine &vacc, list<Request> &requests) {
     User u;
     string nationalIdInput;
 
@@ -84,16 +95,17 @@ bool Signup(unordered_map<string, User>& users) {
         it = GetUserIterator(users, nationalIdInput);
     }
 
-    u.AddData();
+    u.AddData(requests, vacc);
+    u.setVaccine(vacc);
     users.insert(make_pair(u.getNationalId(), u));
 
-    return true;
+    return &users.find(u.getNationalId())->second;
 }
 
 void PrintWelcomePrompt() {
     cout << "Welcome to the vaccine tracking system" << "\n\n";
     cout << "Choose an option from the following" << "\n\n";
-    cout << "1. Login \n";
+    cout << "1. Login \n2. Signup\n";
 }
 
 User* LoginWithPrompts(unordered_map<string, User>& users) {
@@ -105,15 +117,109 @@ User* LoginWithPrompts(unordered_map<string, User>& users) {
     cout << "Enter your password: ";
     cin >> password;
 
-    return Login(users, nationalId, password);
+    User* loginResult = Login(users, nationalId, password);
+    if(!loginResult)
+        loginResult = LoginWithPrompts(users);
+
+    return loginResult;
+}
+
+void AdminMenuWithPrompts(unordered_map<string, User>& users, User* loggedInUser, list<Request> &requests) {
+    int input;
+    cout << "1. Delete user data\n2. View user data.\n3. View Requests\n4. View Statistics\n";
+    cin >> input;
+
+    if(input != 1 && input != 2 &&input != 3 &&input != 4) {
+        AdminMenuWithPrompts(users, loggedInUser, requests);
+        return;
+    }
+
+    if(input == 1) {
+        User::DeleteData(users, *loggedInUser, requests);
+    } else if(input == 2) {
+        User::ViewData(users, *(loggedInUser));
+    } else if(input == 3) {
+
+        for(auto req : requests) {
+            cout << req.getUserNationalId() << " " << req.getState() << "\n";
+        }
+
+    } else if(input == 4) {
+        int* stats = User::GetStatistics(users);
+        unsigned long totalNumberOfUsers = users.size();
+
+        string messages[] = {"Percentage of males: ", "Percentage of females: ",
+                             "Percentage of fully vaccinated: ", "Percentage of partially vaccinated: ",
+                             "Percentage of unvaccinated: "};
+
+        cout << "Total Users count: " << totalNumberOfUsers << endl;
+
+        for (int i = 0; i < 5; ++i) {
+            cout << messages[i] << (float) (*(stats + i)) * 100 / totalNumberOfUsers << "%\n";
+        }
+    }
+}
+
+void UserMenuWithPrompts(unordered_map<string, User>& users, User* loggedInUser, list<Request> &requests) {
+    int vaccinationStatus = (*loggedInUser).isFullyVaccinated();
+    int numberOfPendingRequests = Request::GetNumberOfUserRequestsWithStatus((*loggedInUser).getRequests(), 1);
+
+    if(vaccinationStatus == 1) {
+        cout << "You are fully vaccinated\n";
+    }
+
+    if(numberOfPendingRequests > 0) {
+        cout << "You already have pending requests";
+    }
+
+    if (numberOfPendingRequests > 0 && numberOfPendingRequests < (*loggedInUser).getVaccine().getReqDoses()) {
+        cout << "You already have pending requests.\n";
+    } else {
+        cout << "1. Submit request\n";
+    }
+
+    int input;
+    cout << "1. Delete user data\n2. View user data.\n3. View Requests\n4. View Statistics\n";
+    cin >> input;
+
+    if(input != 1 && input != 2 &&input != 3 &&input != 4) {
+        AdminMenuWithPrompts(users, loggedInUser, requests);
+        return;
+    }
+
+    if(input == 1) {
+        User::DeleteData(users, *loggedInUser, requests);
+    } else if(input == 2) {
+        User::ViewData(users, *(loggedInUser));
+    } else if(input == 3) {
+
+        for(auto req : requests) {
+            cout << req.getUserNationalId() << " " << req.getState() << "\n";
+        }
+
+    } else if(input == 4) {
+        int* stats = User::GetStatistics(users);
+        unsigned long totalNumberOfUsers = users.size();
+
+        string messages[] = {"Percentage of males: ", "Percentage of females: ",
+                             "Percentage of fully vaccinated: ", "Percentage of partially vaccinated: ",
+                             "Percentage of unvaccinated: "};
+
+        cout << "Total Users count: " << totalNumberOfUsers << endl;
+
+        for (int i = 0; i < 5; ++i) {
+            cout << messages[i] << (float) (*(stats + i)) * 100 / totalNumberOfUsers << "%\n";
+        }
+    }
 }
 
 int main() {
     unordered_map<string, User> users;
     list<Request> requests;
     User* loggedInUser;
+    Vaccine vacc = Vaccine("Astrazeneca", "UK", 2);
 
-    SeedData(users, requests);
+    SeedData(users, requests, vacc);
 
     while(true) {
         PrintWelcomePrompt();
@@ -121,42 +227,21 @@ int main() {
         string loginInput;
         cin >> loginInput;
 
-        while (loginInput != "1") {
+        while (loginInput != "1" && loginInput != "2") {
             cout << "Sorry, invalid input. Please try again. \n";
             cin >> loginInput;
         }
 
-        loggedInUser = LoginWithPrompts(users);
-
-        while (!loggedInUser) {
+        if(loginInput == "1") {
             loggedInUser = LoginWithPrompts(users);
+        } else {
+            loggedInUser = Signup(users, vacc, requests);
         }
 
         cout << "Your role is: " << (*loggedInUser).getRole() << "\n";
 
         if ((*loggedInUser).getRole() == "admin") {
-            int input;
-            cout << "1. Delete user data\n2. View user data.\n3. View Requests\n";
-            cin >> input;
-            if(input == 1) {
-
-                User::DeleteData(users, *loggedInUser, requests);
-
-            } else if(input == 2) {
-
-                for(auto user : users) {
-                    User u = user.second;
-
-                    cout << u.getNationalId() << " " << u.getVaccinationStatus() << "\n";
-                }
-
-            } else {
-
-                for(auto req : requests) {
-                    cout << req.getUserNationalId() << " " << req.getState() << "\n";
-                }
-
-            }
+            AdminMenuWithPrompts(users, loggedInUser, requests);
         } else if ((*loggedInUser).getRole() == "worker") {
             cout << "Populating your patients data for the day\n";
             vector<Request> v = User::PopulateTodayPatients(requests);
@@ -168,7 +253,7 @@ int main() {
         } else {
             int numberOfPendingRequests = Request::GetNumberOfUserRequestsWithStatus((*loggedInUser).getRequests(), 1);
 
-            if (numberOfPendingRequests > 0) {
+            if (numberOfPendingRequests > 0 && numberOfPendingRequests < (*loggedInUser).getVaccine().getReqDoses()) {
                 cout << "You already have pending requests.\n";
             } else {
                 cout << "1. Submit request\n";

@@ -31,17 +31,19 @@ private:
 public:
     //constructors
     User();
-    User(string fName, string LName, string nationalId, string password, string governate, string role, char gender, int age, bool vaccinated, Vaccine vaccine, int numOfDoses);
+    User(string fName, string LName, string nationalId, string password, string governate, string role, char gender, int age, Vaccine vaccine);
 
     //methods
-    void AddData();
-//    void ViewData(ArrList<User> users, User user, ArrList<User> Q, ArrList<Vaccine> v); // prints all data by entred by the user with proper messages
+    void AddData(list<Request> &requests, Vaccine &vacc);
+    static void ViewData(unordered_map<string, User>& users, User& user);
+    static void ViewOneUserData(User& user);
     void UpdateData(string fName, string LName, string nationalId, string password, string governate, string role, char gender, int age, bool vaccinated, Vaccine vaccine, int numOfDoses); // updates everything
     void UpdateData_Prompts(); //asks the user which attributes they wish to update and updates them
     static void DeleteData(unordered_map<string, User> &users, User &user, list<Request> &requests);
     static void CheckPatients(unordered_map<string, User>& users, list<Request>& requests, User& u, vector<Request>& v);
-    static void EndList(unordered_map<string, User>& users, list<Request>& requests, const User& u, vector<Request>& v);
+    static void EndList(unordered_map<string, User>& users, list<Request>& requests, User &u, vector<Request>& v);
     static vector<Request> PopulateTodayPatients(list<Request>& requests);
+    static int* GetStatistics(unordered_map<string, User>& users);
 
     //setters
     void setFName(string s) {

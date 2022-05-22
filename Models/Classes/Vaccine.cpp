@@ -3,14 +3,12 @@
 using namespace std;
 
 Vaccine::Vaccine() {
-    this->numOfUsers = 0;
     this->name = "";
     this->country = "";
     this->reqDoses = 0;
 }
 
-Vaccine::Vaccine(int numOfUsers, string name, string country, int reqDoses) {
-    this->numOfUsers = numOfUsers;
+Vaccine::Vaccine(string name, string country, int reqDoses) {
     this->name = name;
     this->country = country;
     this->reqDoses = reqDoses;

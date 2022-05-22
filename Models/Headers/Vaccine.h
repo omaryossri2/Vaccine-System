@@ -6,7 +6,6 @@ using namespace std;
 class Vaccine
 {
 private:
-    int numOfUsers;
     string name;
     string country;
     int reqDoses;
@@ -14,7 +13,7 @@ private:
 public:
     //constructors
     Vaccine();
-    Vaccine(int numOfUsers, string name, string country, int reqDoses);
+    Vaccine(string name, string country, int reqDoses);
 
     void setName(string s) {
         name = s;

@@ -8,7 +8,7 @@
 using namespace std;
 
 User::User(string fName,string LName,string nationalId,string password,string governate,
-           string role,char gender,int age,bool vaccinated,Vaccine vaccine,int numOfDoses) {
+           string role,char gender,int age, Vaccine vaccine) {
     this->fName = fName;
     this->LName = LName;
     this->nationalId = nationalId;
@@ -30,11 +30,10 @@ User::User() {
     this->age = 0;
 }
 
-void User::AddData() {
+void User::AddData(list<Request> &requests, Vaccine &vacc) {
     string s;
     char c;
     int i;
-    bool b;
     cout << "Welcome to the vaccine system" << endl;
     cout << "Fill this form" << endl;
     cout << "-----------------------------" << endl;
@@ -49,7 +48,7 @@ void User::AddData() {
     cin >> s; setPassword(s);
 
     cout << "Please enter governate : ";
-    cin >> s; setNationalId(s);
+    cin >> s; setGovernate(s);
 
     cout << "Please enter gender (m/f) : ";
     cin >> c; setGender(c);
@@ -57,7 +56,20 @@ void User::AddData() {
     cout << "Please enter age (whole number) : ";
     cin >> i; setAge(i);
 
+    cout << "Please enter number of doses taken : ";
+    cin >> i;
+
+    while(i < 0 || i > 2) {
+        cout << "Correct values are either 0, 1 or 2. Please try again";
+        cin >> i;
+    }
+
+    for (int j = 0; j < i; ++j) {
+        auto it = Request::CreateRequest(requests, getNationalId(), 2, vacc);
+        addRequest(it);
+    }
 }
+
 void User:: UpdateData(string fName, string LName, string nationalId, string password, string governate, string role, char gender, int age, bool vaccinated, Vaccine vaccine, int numOfDoses) {
     setFName(fName);
     setLName(LName);
@@ -234,9 +246,11 @@ void User::CheckPatients(unordered_map<string, User>& users, list<Request>& requ
                 continue;
             }
 
-            auto it = std::find_if(v.begin(), v.end(), [&nid](Request req) {
+            auto pred =  [&nid](Request req) {
                 return req.getUserNationalId() == nid;
-            });
+            };
+
+            auto it = std::find_if(v.begin(), v.end(), pred);
 
             if(it != v.end()) {
                 auto userIt = users.find(nid);
@@ -272,10 +286,10 @@ vector<Request> User::PopulateTodayPatients(list<Request>& requests) {
     return list1;
 }
 
-void User::EndList(unordered_map<string, User>& users, list<Request>& requests, const User& u, vector<Request>& v)
+void User::EndList(unordered_map<string, User>& users, list<Request>& requests, User &u, vector<Request>& v)
 {
     //di htb2a fl main abl ml program y2fl bnshel al fl list w nzbt al status bta3hom
-    if (IsAdmin(u)) {
+    if (IsWorker(u)) {
         char ans;
         cout << "Are you sure there are no other patients today? ";
         cin >> ans;
@@ -300,91 +314,105 @@ void User::EndList(unordered_map<string, User>& users, list<Request>& requests, 
     }
 }
 
-//void User::ViewData(unordered_map<string, User>& users, User& user, ArrList<User> Q, ArrList<Vaccine> v) {
-//    if (role == "user") {
-//        cout << "First Name :  " << fName << " \n";
-//        cout << "Last Name :  " << LName << " \n";
-//        cout << "National ID:  " << nationalId << " \n";
-//        cout << "Gender:  " << gender << " \n";
-//        cout << "Age:  " << age << " \n";
-//        cout << "Governate:  " << governate << " \n";
-//        cout << "Gender:  " << gender << " \n";
-//        if (vaccinated) {
-//            cout << "You are vaccinated with  :  " << vaccine.getName() << "\n";
-//            cout << "Number of doses taken  :  " << numOfDoses << "\n";
-//            cout << "Number of doses required  :  " << vaccine.getReqDoses() << "\n";
-//        }
-//        else
-//        {
-//            cout << "You are not vaccinated yet " << "\n";
-//        }
-//    }
-//    else {
-//        int input = 0;
-//        cout << "---------------------------------------------------" << endl;
-//        cout << endl;
-//
-//        cout << "1) view a certain user " << endl;
-//        cout << "2) view all users " << endl;
-//        cin >> input;
-//
-//        if (input == 1) {
-//
-//
-//            string n_id;
-//            cout << "---------------------------------------------------" << endl;
-//
-//            cout << " enter the id of the user you want to delete ";
-//            cin >> n_id;
-//            for (int j = 0; j < users.Length(); j++) {
-//
-//                if (n_id == users.At(j).nationalId && user.role == "user") {
-//
-//                    cout << "First Name :  " << users.At(j).fName << " \n";
-//                    cout << "Last Name :  " << users.At(j).LName << " \n";
-//                    cout << "National ID:  " << users.At(j).nationalId << " \n";
-//                    cout << "Gender:  " << users.At(j).gender << " \n";
-//                    cout << "Age:  " << users.At(j).age << " \n";
-//                    cout << "Governate:  " << users.At(j).governate << " \n";
-//                    cout << "Gender:  " << users.At(j).gender << " \n";
-//                    if (vaccinated) {
-//                        cout << "You are vaccinated with  :  " << users.At(j).vaccine.getName() << "\n";
-//                        cout << "Number of doses taken  :  " << numOfDoses << "\n";
-//                        cout << "Number of doses required  :  " << users.At(j).vaccine.getReqDoses() << "\n";
-//                    }
-//                    else
-//                    {
-//                        cout << "You are not vaccinated yet " << "\n";
-//                    }
-//
-//                }
-//            }
-//        }
-//        else if (input == 2) {
-//
-//
-//            for (int i = 0; i < users.Length(); i++)
-//            {
-//                if (users.At(i).role == "user") {
-//
-//                    cout << "First Name :  " << users.At(i).fName << " \n";
-//                    cout << "Last Name :  " << users.At(i).LName << " \n";
-//                    cout << "National ID:  " << users.At(i).nationalId << " \n";
-//                    cout << "Gender:  " << users.At(i).gender << " \n";
-//                    cout << "Age:  " << users.At(i).age << " \n";
-//                    cout << "Governate:  " << users.At(i).governate << " \n";
-//                    cout << "Gender:  " << users.At(i).gender << " \n";
-//                    if (vaccinated) {
-//                        cout << "You are vaccinated with  :  " << users.At(i).vaccine.getName() << "\n";
-//                        cout << "Number of doses taken  :  " << numOfDoses << "\n";
-//                        cout << "Number of doses required  :  " << users.At(i).vaccine.getReqDoses() << "\n";
-//                    }
-//                    else
-//                    {
-//                        cout << "You are not vaccinated yet " << "\n";
-//                    }
-//                }
-//            }
-//        }
-//    }
-//}
+int* User::GetStatistics(unordered_map<string, User>& users) {
+    int maleCount = 0;
+    int femaleCount = 0;
+    int fullyVaccinatedCount = 0;
+    int partiallyVaccinatedCount = 0;
+    int unvaccinatedCount = 0;
+
+    auto it = users.begin();
+
+    while(it != users.end()) {
+        User u = it->second;
+
+        if (u.gender == 'm')
+            maleCount++;
+
+        if (u.gender == 'f')
+            femaleCount++;
+
+        int vaccinated = u.isFullyVaccinated();
+
+        switch (vaccinated) {
+            case 1:
+                fullyVaccinatedCount++;
+                break;
+            case -1:
+                partiallyVaccinatedCount++;
+                break;
+            case 0:
+                unvaccinatedCount++;
+                break;
+            default:
+                cout << "Unrecognized vaccination state";
+        }
+
+        it++;
+    }
+
+    static int stats[5];
+
+    stats[0] = maleCount;
+    stats[1] = femaleCount;
+    stats[2] = fullyVaccinatedCount;
+    stats[3] = partiallyVaccinatedCount;
+    stats[4] = unvaccinatedCount;
+
+    return stats;
+}
+
+void User::ViewData(unordered_map<string, User>& users, User& user) {
+    if (user.role == "user") {
+        ViewOneUserData(user);
+    } else {
+        int input = 0;
+        cout << "---------------------------------------------------" << endl;
+        cout << endl;
+
+        cout << "1) view a certain user " << endl;
+        cout << "2) view all users " << endl;
+        cin >> input;
+
+        if (input == 1) {
+            string n_id;
+            cout << "---------------------------------------------------" << endl;
+
+            cout << "Enter the id of the user you want to view: ";
+            cin >> n_id;
+
+            auto it = users.find(n_id);
+
+            if(it == users.end()) {
+                cout << "User doesn't exist";
+                ViewData(users, user);
+
+                return;
+            }
+
+            ViewOneUserData(it->second);
+        }
+        else if (input == 2) {
+            auto it = users.begin();
+
+            while(it != users.end()) {
+                ViewOneUserData(it->second);
+                cout << "================================\n";
+
+                it++;
+            }
+        }
+    }
+}
+
+void User::ViewOneUserData(User &user) {
+    cout << "First Name :  " << user.fName << " \n";
+    cout << "Last Name :  " << user.LName << " \n";
+    cout << "National ID:  " << user.nationalId << " \n";
+    cout << "Gender:  " << user.gender << " \n";
+    cout << "Age:  " << user.age << " \n";
+    cout << "Governate:  " << user.governate << " \n";
+    cout << "Gender:  " << user.gender << " \n";
+    cout << "Vaccination status: " << user.getVaccinationStatus() << "\n";
+}
+

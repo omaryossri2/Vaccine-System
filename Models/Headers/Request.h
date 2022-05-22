@@ -15,6 +15,7 @@ private:
     char* date;
 
 public:
+    Request();
     Request(const string &userNationalId, int state, const Vaccine &vaccine, char *date);
 
     static int GetNumberOfUserRequestsWithStatus(vector<list<Request>::iterator>& requestsIterators, int status);
